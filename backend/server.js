@@ -3,6 +3,9 @@ const express = require("express");
 const axios = require("axios");
 const morgan = require("morgan");
 const redis = require("redis");
+const cors = require("cors");
+
+app.use(cors());
 
 const app = express();
 let redisClient = null;
@@ -44,7 +47,7 @@ const startProxyServer = async (port, origin) => {
   app.use(async (req, res) => {
     const cacheKey = req.originalUrl;
     const noCache = req.query["no-cache"] === "true";
-    const ttl = parseInt(req.query["cache-ttl"]) || 600;
+    const ttl = parseInt(req.query["cache-ttl"]) || 60;
 
     try {
       if (!noCache) {
