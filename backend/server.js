@@ -29,7 +29,16 @@ async function connectRedis() {
 const startProxyServer = async (port, origin) => {
   await connectRedis();
 
-  app.use(morgan("dev"));
+  const ansiRegex = /\u001b\[.*?m/g;
+  const stream = {
+    write: async (message) => {
+      const logEntry = message.replace(ansiRegex, "").trim();
+      await redisClient.lPush("proxy:morgan", logEntry);
+      await redisClient.lTrim("proxy:morgan", 0, 49);
+    },
+  };
+
+  app.use(morgan("dev", { stream }));
 
   // Route for cache invalidation
   app.delete("/__cache", async (req, res) => {
@@ -40,6 +49,26 @@ const startProxyServer = async (port, origin) => {
 
     await redisClient.del(key);
     return res.json({ status: "Cache cleared", key });
+  });
+
+  // Route to get recent logs
+  app.get("/__logs", async (req, res) => {
+    try {
+      const logs = await redisClient.lRange("proxy:logs", 0, -1);
+      res.json(logs.map((log) => JSON.parse(log)));
+    } catch (err) {
+      console.error("Error fetching logs:", err.message);
+      res.status(500).json({ error: "Could not fetch logs" });
+    }
+  });
+
+  app.get("/__morgan", async (req, res) => {
+    try {
+      const logs = await redisClient.lRange("proxy:morgan", 0, -1);
+      res.json(logs); // logs are just plain strings
+    } catch (err) {
+      res.status(500).json({ error: "Could not fetch logs" });
+    }
   });
 
   // Proxy handler
@@ -53,6 +82,17 @@ const startProxyServer = async (port, origin) => {
         const cached = await redisClient.get(cacheKey);
         if (cached) {
           res.setHeader("X-Cache", "HIT");
+          // Log to Redis
+          await redisClient.lPush(
+            "proxy:logs",
+            JSON.stringify({
+              url: req.originalUrl,
+              status: "HIT",
+              time: new Date().toISOString(),
+            })
+          );
+          await redisClient.lTrim("proxy:logs", 0, 49); // keep last 50
+
           return res.status(200).json(JSON.parse(cached));
         }
       }
@@ -66,6 +106,16 @@ const startProxyServer = async (port, origin) => {
       }
 
       res.setHeader("X-Cache", "MISS");
+      //Log MISS to Redis
+      await redisClient.lPush(
+        "proxy:logs",
+        JSON.stringify({
+          url: req.originalUrl,
+          status: "MISS",
+          time: new Date().toISOString(),
+        })
+      );
+      await redisClient.lTrim("proxy:logs", 0, 49);
       return res.status(200).json(data);
     } catch (err) {
       console.error("Proxy error:", err.message);
