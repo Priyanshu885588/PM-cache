@@ -71,6 +71,16 @@ const startProxyServer = async (port, origin) => {
     }
   });
 
+  app.get("/origin", async (req, res) => {
+    try {
+      const response = await axios.get(`${origin}/posts`);
+      return res.status(200).json(response.data);
+    } catch (err) {
+      console.error("Origin fetch error:", err.message);
+      return res.status(500).json({ error: "Failed to fetch from origin" });
+    }
+  });
+
   // Proxy handler
   app.use(async (req, res) => {
     const cacheKey = req.originalUrl;
