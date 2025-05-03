@@ -5,9 +5,8 @@ const morgan = require("morgan");
 const redis = require("redis");
 const cors = require("cors");
 
-app.use(cors());
-
 const app = express();
+app.use(cors());
 let redisClient = null;
 
 // Connect to Redis
