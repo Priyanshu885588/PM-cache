@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const morgan = require("morgan");
@@ -8,7 +9,14 @@ let redisClient = null;
 
 // Connect to Redis
 async function connectRedis() {
-  redisClient = redis.createClient(); // defaults to localhost:6379
+  redisClient = redis.createClient({
+    username: process.env.REDIS_USER,
+    password: process.env.REDIS_PASS,
+    socket: {
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+    },
+  }); // defaults to localhost:6379
 
   redisClient.on("error", (err) => console.error("Redis error:", err));
 
@@ -36,7 +44,7 @@ const startProxyServer = async (port, origin) => {
   app.use(async (req, res) => {
     const cacheKey = req.originalUrl;
     const noCache = req.query["no-cache"] === "true";
-    const ttl = parseInt(req.query["cache-ttl"]) || 60;
+    const ttl = parseInt(req.query["cache-ttl"]) || 600;
 
     try {
       if (!noCache) {
