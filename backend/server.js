@@ -32,6 +32,11 @@ const startProxyServer = async (port, origin) => {
   app.use(morgan("dev"));
 
   // Route for cache invalidation
+
+  app.get("/start", async (req, res) => {
+    return res.json({ status: "Server started" });
+  });
+
   app.delete("/__cache", async (req, res) => {
     const key = req.query.key;
     if (!key) {
