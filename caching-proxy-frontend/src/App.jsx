@@ -72,7 +72,7 @@ const App = () => {
             <FaCircle className="text-red-500 text-[20px] border-2 p-1 rounded-full border-white" />
           </div>
 
-          <p className="w-112 text-white">
+          <p className="md:w-112 text-white w-[250px] p-2">
             The VM is sleeping! Since this is a free server, it takes a few
             seconds to wake up. Thanks for being the one to start it up! ⚡
           </p>
@@ -84,8 +84,8 @@ const App = () => {
     <>
       <div className="min-h-screen bg-gray-300 text-white p-6">
         <div className="max-w-5xl mx-auto bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-800">
-          <h1 className="text-3xl font-bold mb-4 text-center text-blue-100 flex justify-center items-center gap-2">
-            <FiZap /> Cache Performance Tester (For blog post)
+          <h1 className="md:text-3xl font-bold mb-4 text-center text-blue-100 flex justify-center items-center gap-2 text-xl">
+            Cache Performance Tester (For blog post)
           </h1>
 
           <div className="flex flex-col gap-4 mb-6 items-center">
@@ -122,7 +122,7 @@ const App = () => {
             )}
           </div>
 
-          <div className="flex gap-6 justify-between">
+          <div className="md:flex gap-6 justify-between md:flex-row flex-col">
             <div className="w-full md:w-1/2 flex flex-col items-start">
               {firstTime !== null && (
                 <div className="mb-4">
